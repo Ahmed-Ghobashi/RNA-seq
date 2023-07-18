@@ -15,7 +15,6 @@ setup(
     url='https://github.com/Ahmed-Ghobashi/RNA-seq',
     packages=find_packages(),
     include_package_data=True,
-    install_requires=['Fastqc','star','subread'],  # add any additional packages that# needs to be installed along with your package. Eg: 'caer'
     scripts=['package_runner.py'],
     keywords=['python', 'RNA-seq package'],
 
