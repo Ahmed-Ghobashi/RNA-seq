@@ -41,91 +41,100 @@ def cmdLine():
 
     #os.mkdir(os.path.join(args.save_dir,'fastqc'))
 
-    fastq_path=os.path.join(path,'fastqc')
+    if args.job=='Fastqc' or args.job=='ALL':
+        fastq_path=os.path.join(path,'fastqc')
 
-    if not os.path.isdir(fastq_path): os.mkdir(fastq_path)
+        if not os.path.isdir(fastq_path): os.mkdir(fastq_path)
     #path=os.path.realpath(os.path.join(args.save_dir,'fastqc'))
 
-    if args.paired== 'NO':
-        cmd=['fastqc', args.read1, '-o' , fastq_path]
-        cmd=' '.join(cmd)
-    else:
-        cmd = ['fastqc', args.read1, args.read2,'-o', fastq_path]
-        cmd = ' '.join(cmd)
+        if args.paired== 'NO':
+            cmd=['fastqc', args.read1, '-o' , fastq_path]
+            cmd=' '.join(cmd)
+        else:
+            cmd = ['fastqc', args.read1, args.read2,'-o', fastq_path]
+            cmd = ' '.join(cmd)
 
     ##run the command
-    print('*******Runing FASTQC*********')
+        print('*******Runing FASTQC*********')
 
-    subprocess.run(cmd, shell=True,check=True)
+        subprocess.run(cmd, shell=True,check=True)
 
     ##creating genome index for alignemnt
-    if args.genome_index =='FALSE':
 
-        index_cmd=['STAR', '--runThreadN', args.thread_core
+    elif args.job == 'Genomic_index' or args.job=='ALL':
+        if args.genome_index =='FALSE':
+            index_cmd=['STAR', '--runThreadN', args.thread_core
                ,'--runMode genomeGenerate', '--genomeDir',args.genome_dir, '--genomeFastaFiles', args.fasta_dir, '--sjdbGTFfile',args.gtf_dir]
 
-        index_cmd=' '.join(index_cmd)
+            index_cmd=' '.join(index_cmd)
 
     ##generating the index
-        print('*******GENERATING GENOME INDEX BASED ON THE PROVIDED GTF AND FASTA FILES*********')
+            print('*******GENERATING GENOME INDEX BASED ON THE PROVIDED GTF AND FASTA FILES*********')
 
-        subprocess.run(index_cmd,shell=True,check=True)
+            subprocess.run(index_cmd,shell=True,check=True)
 
     ##aligning using STAR
 
     #os.mkdir(os.path.join(args.save_dir, 'RNA_aligment'))
-    RNA_aligment=os.path.join(path,'RNA_aligment')
+        RNA_aligment=os.path.join(path,'RNA_aligment')
 
-    if not os.path.isdir(RNA_aligment): os.mkdir(RNA_aligment)
+        if not os.path.isdir(RNA_aligment): os.mkdir(RNA_aligment)
 
     #path = os.path.realpath(os.path.join(args.save_dir, 'RNA_aligment'))
-    path_ = os.path.realpath(RNA_aligment)
-    path_result = [path_, '/', args.condition]
-    path_result = ''.join(path_result)
+        path_ = os.path.realpath(RNA_aligment)
+        path_result = [path_, '/', args.condition]
+        path_result = ''.join(path_result)
 
 
-    align_cmd=['STAR','--runThreadN', args.thread_core,'--genomeDir',args.genome_dir,'--runMode alignReads','--outSAMtype BAM SortedByCoordinate',
+        align_cmd=['STAR','--runThreadN', args.thread_core,'--genomeDir',args.genome_dir,'--runMode alignReads','--outSAMtype BAM SortedByCoordinate',
                '--quantMode GeneCounts','--outFileNamePrefix', path_result, '--readFilesIn', args.read1]
 
-    if args.paired=='YES':
-        align_cmd.append(args.read2)
+        if args.paired=='YES':
+            align_cmd.append(args.read2)
 
 
-    if args.read1[-2:]=='gz':
-        align_cmd.append('--readFilesCommand zcat')
+        if args.read1[-2:]=='gz':
+            align_cmd.append('--readFilesCommand zcat')
 
 
-    align_cmd=' '.join(align_cmd)
+        align_cmd=' '.join(align_cmd)
 
     ##aligning the genome
-    print('*******DOING THE ALIGNING *********')
-    subprocess.run(align_cmd, shell=True, check=True)
+        print('*******DOING THE ALIGNING *********')
+        subprocess.run(align_cmd, shell=True, check=True)
+
+
 
     ###generating the count matrix
+    elif args.job=='Count' or args.job=='ALL':
 
-    count = os.path.join(path, 'Counts')
+        count = os.path.join(path, 'Counts')
 
-    if not os.path.isdir(count): os.mkdir(count)##make directory for count matrix
+        if not os.path.isdir(count): os.mkdir(count)##make directory for count matrix
     #os.mkdir(os.path.join(args.save_dir, 'Counts'))##make directory for the counts
 
 
-    count_output = [count, '/', args.condition,'.txt']##
-    count_output=''.join(count_output)
+        count_output = [count, '/', args.condition,'.txt']##
+        count_output=''.join(count_output)
 
-    path_RNA = os.path.realpath(RNA_aligment)##read the bam file in RNA aligment
-    bam=[path_RNA,'/',args.condition,'Aligned.sortedByCoord.out.bam']
-    bam = ''.join(bam)
+        RNA_aligment = os.path.join(path, 'RNA_aligment')
 
-    count_cmd=['featureCounts', '-F GTF --primary -t exon -g gene_id --minOverlap 10','-T', args.thread_core,'-s', args.strandness,'-a',args.gtf_dir, '-o', count_output, bam]
+        if not os.path.isdir(RNA_aligment): os.mkdir(RNA_aligment)
 
-    if args.paired=='YES':
-        count_cmd.append('-p -B -C')
+        path_RNA = os.path.realpath(RNA_aligment)##read the bam file in RNA aligment
+        bam=[path_RNA,'/',args.condition,'Aligned.sortedByCoord.out.bam']
+        bam = ''.join(bam)
 
-    count_cmd=' '.join(count_cmd)
+        count_cmd=['featureCounts', '-F GTF --primary -t exon -g gene_id --minOverlap 10','-T', args.thread_core,'-s', args.strandness,'-a',args.gtf_dir, '-o', count_output, bam]
+
+        if args.paired=='YES':
+            count_cmd.append('-p -B -C')
+
+        count_cmd=' '.join(count_cmd)
 
     ##aligning the genome
-    print('*******RUNNING FEATURECOUNT *********')
-    subprocess.run(count_cmd,shell=True, check=True)
+        print('*******RUNNING FEATURECOUNT *********')
+        subprocess.run(count_cmd,shell=True, check=True)
 
 if __name__== "__main__":
     cmdLine()
