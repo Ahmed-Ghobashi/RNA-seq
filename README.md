@@ -3,10 +3,9 @@ This work performs a Fastqc, generates a Genome index, genome aligning using STA
 
 Start by cloning the source code:
 ```
-git https://github.com/Ahmed-Ghobashi/RNA-seq.git
+git clone https://github.com/Ahmed-Ghobashi/RNA-seq.git
 cd RNA-seq
 ```
-
 
 if you are working on HPC, you could load the dependencies using the ```module load``` function
 
